@@ -330,8 +330,7 @@ module "server_subnet_1" {
 
 
 module "autoscaling" {
-  source  = "terraform-aws-modules/autoscaling/aws"
-  version = "8.0.1"
+  source = "github.com/terraform-aws-modules/terraform-aws-autoscaling"
 
   # Autoscaling group
   name = "myasg"
