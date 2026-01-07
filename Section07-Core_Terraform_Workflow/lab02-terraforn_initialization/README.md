@@ -12,3 +12,8 @@ This lab mainly focuses on initializing terraform with terrafrom init and the va
 If we update the default backend to move terraform state file to a different directory we need to run init again.
     Inside terraform.tf add a backed block for a new state file location and rerun terraform init.
     If the state file is not empty then after running the command we will be prompted to copy the existing state to new backend, entering yes will will automatically copy the state information from the default location to your new directory during the re-initialization process.
+    To only reconfigure the backend without migrating state run - terraform init -reconfigure
+    To reconfigure and migrate the existing state run - terraform init -migrate-state
+6. After updating version of any of the existing providers we need to run terraform init -upgrade.
+    If the -upgrade option is not issued terraform will user version installed or specified withing the dependency lock file.
+    Update azure provider version inside terraform.tf to 2.57.0 and run terraform init -upgrade.
