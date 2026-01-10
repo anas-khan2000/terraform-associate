@@ -266,7 +266,17 @@ resource "aws_key_pair" "generated" {
 }
 
 resource "aws_instance" "aws_linux" {
-  ami = "ami-0bdd88bd06d16ba03"
+  ami           = "ami-0bdd88bd06d16ba03"
   instance_type = "t3.micro"
-  
+
+}
+
+# Terraform Resource Block - To Build EC2 instance in Public Subnet
+resource "aws_instance" "web_server_2" {
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = "t3.micro"
+  subnet_id     = aws_subnet.public_subnets["public_subnet_2"].id
+  tags = {
+    Name = "Web EC2 Server"
+  }
 }
