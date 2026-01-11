@@ -13,7 +13,7 @@ Terraform uses a state file to keep track of the resources it manages. To preven
 ### Error Example
 
 If you try to run `terraform apply` while the state is locked, you may see an error like:
-
+```
 Error: Error acquiring the state lock
 
 Error locking state: Error acquiring the state lock: state lock already held
