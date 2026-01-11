@@ -39,3 +39,6 @@ terraform.rc
 #Ignore private key files
 *.pem
 *.key
+
+#Ignore http backend statefiles
+.stateserver
