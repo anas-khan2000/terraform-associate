@@ -1,7 +1,5 @@
 ## Lab: Terraform Collections and Structure Types
 
-**Duration:** 10 minutes
-
 This lab introduces how to organize and structure data in Terraform using various value types. You'll learn to use primitive types (string, number, bool) and complex types (list, map, object) to make your configurations more flexible and maintainable.
 
 ### Value Types in Terraform
@@ -86,5 +84,3 @@ availability_zone = each.value.az
 ```
 
 ---
-
-By the end of this lab, you'll be able to use lists, maps, and more complex structures to manage and iterate over resources efficiently in Terraform.
