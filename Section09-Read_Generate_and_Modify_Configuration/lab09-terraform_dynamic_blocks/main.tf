@@ -186,9 +186,9 @@ resource "aws_route_table" "public_route_table" {
   vpc_id = aws_vpc.vpc.id
 
   route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.internet_gateway.id
-    #nat_gateway_id = aws_nat_gateway.nat_gateway.id
+    cidr_block     = "0.0.0.0/0"
+    gateway_id     = aws_internet_gateway.internet_gateway.id
+    nat_gateway_id = aws_nat_gateway.nat_gateway.id
   }
   tags = {
     Name      = "demo_public_rtb"
@@ -200,8 +200,8 @@ resource "aws_route_table" "private_route_table" {
   vpc_id = aws_vpc.vpc.id
 
   route {
-    cidr_block = "0.0.0.0/0"
-    # gateway_id     = aws_internet_gateway.internet_gateway.id
+    cidr_block     = "0.0.0.0/0"
+    gateway_id     = aws_internet_gateway.internet_gateway.id
     nat_gateway_id = aws_nat_gateway.nat_gateway.id
   }
   tags = {
@@ -234,23 +234,23 @@ resource "aws_internet_gateway" "internet_gateway" {
 }
 
 #Create EIP for NAT Gateway
-# resource "aws_eip" "nat_gateway_eip" {
-#   domain     = "vpc"
-#   depends_on = [aws_internet_gateway.internet_gateway]
-#   tags = {
-#     Name = "demo_igw_eip"
-#   }
-# }
+resource "aws_eip" "nat_gateway_eip" {
+  domain     = "vpc"
+  depends_on = [aws_internet_gateway.internet_gateway]
+  tags = {
+    Name = "demo_igw_eip"
+  }
+}
 
 #Create NAT Gateway
-# resource "aws_nat_gateway" "nat_gateway" {
-#   depends_on    = [aws_subnet.public_subnets]
-#   # allocation_id = aws_eip.nat_gateway_eip.id
-#   subnet_id     = aws_subnet.public_subnets["public_subnet_1"].id
-#   tags = {
-#     Name = "demo_nat_gateway"
-#   }
-# }
+resource "aws_nat_gateway" "nat_gateway" {
+  depends_on = [aws_subnet.public_subnets]
+  allocation_id = aws_eip.nat_gateway_eip.id
+  subnet_id = aws_subnet.public_subnets["public_subnet_1"].id
+  tags = {
+    Name = "demo_nat_gateway"
+  }
+}
 
 # Terraform Data Block - To Lookup Latest Ubuntu 20.04 AMI Image
 data "aws_ami" "ubuntu" {
@@ -317,23 +317,42 @@ output "min_value" {
   value = local.minimum
 }
 
+variable "web_ingress" {
+  type = map(object({
+    description = string
+    port        = number
+    protocol    = string
+    cidr_blocks = list(string)
+  }))
+  default = {
+    "80" = {
+      description = "Port 80"
+      port        = 80
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+    "443" = {
+      description = "Port 443"
+      port        = 443
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  }
+}
+
 resource "aws_security_group" "main" {
-  name = "core-sg"
+  name   = "core-sg"
   vpc_id = aws_vpc.vpc.id
 
-  ingress {
-    description = "Port 443"
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  dynamic "ingress" {
+    for_each = var.web_ingress
 
-  ingress {
-    description = "Port 80"
-    from_port = 80
-    to_port = 80
-    protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    content {
+      description = ingress.value.description
+      from_port   = ingress.value.port
+      to_port     = ingress.value.port
+      protocol    = ingress.value.protocol
+      cidr_blocks = ingress.value.cidr_blocks
+    }
   }
 }
