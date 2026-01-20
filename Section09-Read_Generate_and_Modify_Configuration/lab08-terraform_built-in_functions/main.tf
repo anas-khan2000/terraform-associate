@@ -11,27 +11,6 @@ provider "aws" {
 #Retrieve the list of AZs in the current AWS region
 data "aws_availability_zones" "available" {}
 data "aws_region" "current" {}
-data "aws_s3_bucket" "data_bucket" {
-  bucket = "data-lookup-bucket-19jan"
-}
-
-resource "aws_iam_policy" "policy" {
-  name        = "data_bucket_policy"
-  description = "Allow access to my bucket"
-  policy = jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [
-      {
-        "Effect" : "Allow",
-        "Action" : [
-          "s3:Get*",
-          "s3:List*"
-        ],
-        "Resource" : "${data.aws_s3_bucket.data_bucket.arn}"
-      }
-    ]
-  })
-}
 
 #Terraform Data Block - Lookup Ubuntu 22.04
 data "aws_ami" "ubuntu_22_04" {
@@ -61,12 +40,12 @@ locals {
 locals {
   # Common tags to be assigned to all resources
   common_tags = {
-    Name      = local.server_name
-    Owner     = local.team
-    App       = local.application
-    Service   = local.service_name
-    AppTeam   = local.app_team
-    CreatedBy = local.createdby
+    Name      = join("-", [local.application, data.aws_region.current.name, local.createdby])
+    Owner     = lower(local.team)
+    App       = lower(local.application)
+    Service   = lower(local.service_name)
+    AppTeam   = lower(local.app_team)
+    CreatedBy = lower(local.createdby)
   }
 }
 
@@ -75,10 +54,10 @@ resource "aws_vpc" "vpc" {
   cidr_block = var.vpc_cidr
 
   tags = {
-    Name        = var.vpc_name
-    Environment = "demo_environment"
-    Terraform   = "true"
-    Region      = data.aws_region.current.region
+    Name        = upper(var.vpc_name)
+    Environment = upper(var.environment)
+    Terraform   = upper("true")
+    Region      = upper(data.aws_region.current.region)
   }
 }
 
@@ -255,18 +234,18 @@ resource "aws_internet_gateway" "internet_gateway" {
 }
 
 #Create EIP for NAT Gateway
-resource "aws_eip" "nat_gateway_eip" {
-  domain     = "vpc"
-  depends_on = [aws_internet_gateway.internet_gateway]
-  tags = {
-    Name = "demo_igw_eip"
-  }
-}
+# resource "aws_eip" "nat_gateway_eip" {
+#   domain     = "vpc"
+#   depends_on = [aws_internet_gateway.internet_gateway]
+#   tags = {
+#     Name = "demo_igw_eip"
+#   }
+# }
 
 #Create NAT Gateway
 resource "aws_nat_gateway" "nat_gateway" {
   depends_on    = [aws_subnet.public_subnets]
-  allocation_id = aws_eip.nat_gateway_eip.id
+  # allocation_id = aws_eip.nat_gateway_eip.id
   subnet_id     = aws_subnet.public_subnets["public_subnet_1"].id
   tags = {
     Name = "demo_nat_gateway"
@@ -323,4 +302,17 @@ resource "aws_subnet" "list_subnet" {
   vpc_id            = aws_vpc.vpc.id
   cidr_block        = each.value.ip
   availability_zone = each.value.az
+}
+
+locals {
+  maximum = max(var.num_1, var.num_2, var.num_3)
+  minimum = min(var.num_1, var.num_2, var.num_3, 44, 20)
+}
+
+output "max_value" {
+  value = local.maximum
+}
+
+output "min_value" {
+  value = local.minimum
 }
